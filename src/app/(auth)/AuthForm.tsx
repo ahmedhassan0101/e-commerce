@@ -55,12 +55,14 @@ const AuthForm: React.FC<{ page: "login" | "signUp" }> = ({ page }) => {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log("values", values);
+      
       toast({
         title: page === "login" ? "Login Successful" : "Registration Successful",
         description: page === "login" 
           ? "You have been logged in successfully!" 
           : "Your account has been created successfully!",
       });
+
       // Add redirection or other actions here
     } catch (error) {
       toast({
