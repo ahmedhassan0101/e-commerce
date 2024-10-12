@@ -30,14 +30,16 @@ export async function POST(request: Request) {
     const newUser = new User({
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     await newUser.save();
     // Generate JWT token with user ID
+
     const verificationToken = generateVerificationToken(newUser._id.toString());
     // Send verification email
     await sendVerificationEmail(email, verificationToken);
+
     // Remove sensitive information from the response
     const userResponse = newUser.toObject();
     delete userResponse.password;
@@ -46,7 +48,8 @@ export async function POST(request: Request) {
       {
         message:
           "User registered successfully. Please check your email to verify your account.",
-        user: userResponse,
+        data: { user: userResponse },
+        status: 201,
       },
       { status: 201 }
     );
@@ -54,7 +57,9 @@ export async function POST(request: Request) {
     console.error("Signup error:", error);
     return NextResponse.json(
       error.errors || {
-        message: error.message || "An unexpected error occurred",
+        message:
+          error.message ||
+          "An unexpected error occurred [from srcappapiauthsignup\route.ts]",
       },
       { status: error.status || 500 }
     );

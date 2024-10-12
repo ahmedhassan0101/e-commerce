@@ -2,7 +2,6 @@ export const imageLoader = (path: string): string => `/${path}`;
 import * as Yup from "yup";
 // import crypto from "crypto";
 import jwt from "jsonwebtoken";
-// Cannot find module 'jsonwebtoken' or its corresponding type declarations.ts(2307)
 
 export function generateVerificationToken(userId: string): string {
   return jwt.sign(
@@ -49,7 +48,7 @@ export function validateBody<T>(body: unknown, schema: Yup.Schema<T>): T {
 
 // generate a random base64 string using Node.js:
 // console.log(require('crypto').randomBytes(32).toString('base64'));
-console.log(require("crypto").randomBytes(64).toString("hex"));
+// console.log(require("crypto").randomBytes(64).toString("hex"));
 // function generateJWTSecret() {
 //   return crypto.randomBytes(64).toString('hex');
 // }

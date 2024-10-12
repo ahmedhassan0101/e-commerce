@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { addCsrfToken } from "@/utils/csrf";
 import { imageLoader } from "@/utils/functions";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
@@ -15,6 +16,11 @@ interface AuthProvidersProps {
 }
 
 export default function AuthProviders({ providers }: AuthProvidersProps) {
+  const handleSignIn = async (providerId: string) => {
+    const callbackUrl = await addCsrfToken("/api/auth/callback/${providerId}");
+    await signIn(providerId, { callbackUrl });
+  };
+  console.log(providers)
   return (
     <div className="w-full max-w-sm text-center">
       <div className="flex items-center justify-center mb-3">
@@ -27,7 +33,7 @@ export default function AuthProviders({ providers }: AuthProvidersProps) {
           return (
             <Button
               key={provider.id}
-              onClick={() => signIn(provider.id)}
+              onClick={() => handleSignIn(provider.id)}
               variant={"outline"}
               className=" justify-between"
             >
