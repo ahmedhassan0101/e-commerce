@@ -3,37 +3,43 @@ import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,
   AxiosResponse,
+  AxiosRequestConfig,
 } from "axios";
+import Cookies from "js-cookie";
 
-// Define your API base URL
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 // Define custom error type
-export interface ApiError extends Error {
+export interface ApiError {
+  success: false;
+  message: string;
   status?: number;
   data?: any;
 }
 
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
+  message?: string;
+  status?: number;
+}
 // Create a custom Axios instance
 const axiosInstance: AxiosInstance = axios.create({
+  //error Expression expected.ts(1109)
+
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add request interceptor (e.g., to add auth token)
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // const token = typeof window !== 'undefined' ? localStorage.getItem("accessToken") : null;
-
-    const token = localStorage.getItem("accessToken");
+    const token = Cookies.get("accessToken");
     if (token) {
-      if (config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -43,18 +49,63 @@ axiosInstance.interceptors.request.use(
 );
 
 // Add response interceptor (e.g., to handle errors globally)
+// axiosInstance.interceptors.response.use(
+//   (response: AxiosResponse) => {
+//     return response.data;
+//   },
+//   (error: AxiosError) => {
+//     const customError: ApiError = {
+//       message:
+//         (error.response?.data as any)?.message ||
+//         "An unexpected error occurred [from interceptors.response]",
+//       status: error.response?.status,
+//       data: error.response?.data,
+//     };
+//     return Promise.reject(customError);
+//   }
+// );
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     return response.data;
   },
   (error: AxiosError) => {
-    const customError: ApiError = new Error(
-      (error.response?.data as any)?.message || "An unexpected error occurred"
-    );
-    customError.status = error.response?.status;
-    customError.data = error.response?.data;
+    console.error("Interceptor caught error:", error);
+    console.error("Error response:", error.response);
+    const customError: ApiError = {
+      success: false,
+      message:
+        (error.response?.data as any)?.message ||
+        `An unexpected error occurred: ${error.message}`,
+      status: error.response?.status,
+      data: error.response?.data,
+    };
     return Promise.reject(customError);
   }
 );
-
 export default axiosInstance;
+
+// Generic request function
+export async function apiRequest<T>(
+  config: AxiosRequestConfig
+): Promise<ApiSuccess<T> | ApiError> {
+  try {
+    const response = await axiosInstance.request<T>(config);
+    console.log("apiRequest response", response);
+    return {
+      success: true,
+      data: response.data,
+      message: (response as any).message,
+      status: response.status,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+      error.response?.data?.message ||
+      error.message ||
+      "An unexpected error occurred [from Generic apiRequest]",
+    status: error.response?.status,
+    data: error.response?.data,
+    };
+  }
+}

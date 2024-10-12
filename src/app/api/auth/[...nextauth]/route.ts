@@ -12,12 +12,24 @@ const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: providers,
   debug: true,
+  // debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/login",
-    // signOut: "/login",
-    // error: "/auth/error", // Error code passed in query string as ?error=
-    // verifyRequest: '/auth/verify-request', // (used for check email message)
-    // newUser: '/auth/new-user' // New users will be directed here on first sign in (leave the property out if not of interest)
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    },
   },
 };
 const handler = NextAuth(authOptions);
@@ -65,7 +77,6 @@ export { handler as GET, handler as POST };
 //   },
 //   debug: true,
 // };
-
 
 // callbacks: authCallbacks,
 // pages: { signIn: "/auth/login" },

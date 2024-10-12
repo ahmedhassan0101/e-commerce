@@ -23,7 +23,7 @@ export default function AboutUs() {
       <Image className="mb-3" src="/logo.png" alt="logo" width="150" height="0" priority />
       <ul className="text-sm-semi-dark col-flex mb-4">
         {links.map((link) => (
-          <li>
+          <li key={link.name}>
             <Link href={link.link}>{link.name}</Link>
           </li>
         ))}

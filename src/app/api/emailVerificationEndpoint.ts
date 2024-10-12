@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error("Email verification error:", error);
     return NextResponse.json(
-      { message: error.message || "An unexpected error occurred" },
+      { message: error.message || "An unexpected error occurred, [from emailVerificationEndpoint]" },
       { status: 500 }
     );
   }

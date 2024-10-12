@@ -2,81 +2,99 @@
 
 import React from "react";
 import { Formik, Form } from "formik";
-import * as Yup from "yup";
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import FormikInput from "@/components/form/FormikInput";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { KeySquare, Send, User } from "lucide-react";
-
-const signupValidationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
-  conf_password: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Confirm password is required"),
-});
-
-const loginValidationSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: Yup.string().required("Password is required"),
-});
-
-interface AuthFormValues {
-  name?: string;
-  email: string;
-  password: string;
-  conf_password?: string;
+import { authApi } from "@/utils/apiService";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  AuthData,
+  getInitialValues,
+  getValidationSchema,
+} from "./sign-up/constants";
+interface SubmitOptions {
+  setSubmitting: (isSubmitting: boolean) => void;
 }
 
-const AuthForm: React.FC<{ page: "login" | "signUp" }> = ({ page }) => {
+type HandleSubmit = (values: AuthData, options: SubmitOptions) => Promise<void>;
+
+const AuthForm: React.FC<{ isSignUp?: boolean }> = ({ isSignUp }) => {
   const { data: session } = useSession();
   const { toast } = useToast();
-
-  const initialValues: AuthFormValues = page === "login" 
-    ? { email: "", password: "" }
-    : { name: "", email: "", password: "", conf_password: "" };
-
-  const validationSchema = page === "login" ? loginValidationSchema : signupValidationSchema;
-
-  const handleSubmit = async (
-    values: AuthFormValues,
-    { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
-  ) => {
+  const initialValues = getInitialValues(isSignUp);
+  const validationSchema = getValidationSchema(isSignUp);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const handleSubmit: HandleSubmit = async (values, { setSubmitting }) => {
+    setSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("values", values);
-      
-      toast({
-        title: page === "login" ? "Login Successful" : "Registration Successful",
-        description: page === "login" 
-          ? "You have been logged in successfully!" 
-          : "Your account has been created successfully!",
-      });
+      if (isSignUp) {
+        const { success, data, message } = await authApi.signUp(values);
+        if (success && data) {
+          toast({
+            title: "Success",
+            description:
+              message ||
+              "Account created successfully. Please check your email to verify your account.",
+          });
+          const signInResult = await signIn("credentials", {
+            redirect: false,
+            email: values.email,
+            password: values.password,
+          });
 
-      // Add redirection or other actions here
-    } catch (error) {
+          if (signInResult?.error) {
+            toast({
+              title: "Warning",
+              description:
+                "Account created, but automatic login failed. Please log in manually.",
+              variant: "destructive",
+            });
+            router.push("/login");
+          } else {
+            router.push(callbackUrl);
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: message || "An error occurred during sign up.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: values.email,
+          password: values.password,
+          callbackUrl,
+        });
+        if (result?.error) {
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive",
+          });
+        } else {
+          router.push(callbackUrl);
+        }
+      }
+    } catch (error: any) {
+      console.error("Submission error:", error);
       toast({
-        title: page === "login" ? "Login Failed" : "Registration Failed",
-        description: page === "login"
-          ? "There was an error logging in. Please try again."
-          : "There was an error creating your account. Please try again.",
+        title: "Error",
+        description:
+          error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
       setSubmitting(false);
     }
   };
-
   return (
     <Formik
       initialValues={initialValues}
@@ -85,12 +103,12 @@ const AuthForm: React.FC<{ page: "login" | "signUp" }> = ({ page }) => {
     >
       {({ isSubmitting }) => (
         <Form className="w-full max-w-sm grid gap-4">
-          {page === "signUp" && (
+          {isSignUp && (
             <FormikInput
-              name="name"
+              name="username"
               label="Name"
               placeholder="Enter your name"
-              prefix={<User className=""/>}
+              prefix={<User className="" />}
             />
           )}
           <FormikInput
@@ -98,26 +116,26 @@ const AuthForm: React.FC<{ page: "login" | "signUp" }> = ({ page }) => {
             label="Email"
             type="email"
             placeholder="Enter your email"
-            prefix={<Send className=""/>}
+            prefix={<Send className="" />}
           />
           <FormikInput
             name="password"
             label="Password"
             type="password"
             placeholder="Enter your password"
-            prefix={<KeySquare className=""/>}
+            prefix={<KeySquare className="" />}
           />
-          {page === "signUp" && (
+          {isSignUp && (
             <FormikInput
               name="conf_password"
               label="Confirm Password"
               type="password"
               placeholder="Confirm your password"
-              prefix={<KeySquare className=""/>}
+              prefix={<KeySquare className="" />}
             />
           )}
 
-          {page === "login" ? (
+          {!isSignUp ? (
             <div className="flex flex-col justify-center items-center">
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {isSubmitting ? "Logging in..." : "Login"}

@@ -27,7 +27,7 @@ export default function HelpAndSupport() {
       <h2 className="text-xl-semi-darker mb-2">Help & Support</h2>
       <ul className="text-sm-semi-dark col-flex">
         {links.map((link) => (
-          <li>
+          <li key={link.name}>
             <Link href={link.link}>{link.name}</Link>
           </li>
         ))}

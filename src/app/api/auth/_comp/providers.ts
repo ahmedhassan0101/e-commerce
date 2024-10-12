@@ -1,7 +1,10 @@
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import Auth0Provider from "next-auth/providers/auth0";
-
+import CredentialsProvider from "next-auth/providers/credentials";
+import User from "@/app/models/User";
+import db from "@/utils/db";
+import bcrypt from "bcryptjs";
 const {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
@@ -26,10 +29,39 @@ export const providers = [
     clientId: GITHUB_ID!,
     clientSecret: GITHUB_SECRET!,
   }),
+  CredentialsProvider({
+    name: "Credentials",
+    credentials: {
+      email: { label: "Email", type: "text" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        throw new Error("Invalid credentials");
+      }
+      await db.connectDb();
+      const user = await User.findOne({ email: credentials.email });
+      if (!user || !user.password) {
+        throw new Error("Invalid credentials");
+      }
+      const isCorrectPassword = await bcrypt.compare(
+        credentials.password,
+        user.password
+      );
+      if (!isCorrectPassword) {
+        throw new Error("Invalid credentials");
+      }
+      return {
+        id: user._id,
+        email: user.email,
+        name: user.username,
+        // role: user.role || "user",
+      };
+    },
+  }),
 ];
 
 // import CredentialsProvider from "next-auth/providers/credentials";
-
 
 // // Provider configurations
 // export const providers = [
