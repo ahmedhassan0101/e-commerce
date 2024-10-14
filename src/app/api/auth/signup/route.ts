@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import * as Yup from "yup";
 import db from "@/utils/db";
-import { generateVerificationToken, validateBody } from "@/utils/functions";
+import { validateBody } from "@/utils/functions";
 import User from "@/app/models/User";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "@/utils/emailSender";
+import { generateVerificationToken } from "@/utils/auth";
 
 const signupSchema = Yup.object({
   username: Yup.string().required(),
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
 
     const verificationToken = generateVerificationToken(newUser._id.toString());
     // Send verification email
-    await sendVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(newUser.email, verificationToken);
 
     // Remove sensitive information from the response
     const userResponse = newUser.toObject();
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       error.errors || {
         message:
           error.message ||
-          "An unexpected error occurred [from srcappapiauthsignup\route.ts]",
+          "An unexpected error occurred [from src/app/api/auth/signup/route.ts]",
       },
       { status: error.status || 500 }
     );

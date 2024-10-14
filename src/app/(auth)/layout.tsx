@@ -1,4 +1,4 @@
-import AuthProviders from "./AuthProviders";
+import AuthProviders from "./comp/AuthProviders";
 import { getProviders } from "next-auth/react";
 
 export default async function AuthLayout({

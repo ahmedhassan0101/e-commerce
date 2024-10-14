@@ -29,7 +29,7 @@ const axiosInstance: AxiosInstance = axios.create({
   //error Expression expected.ts(1109)
 
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  // timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
