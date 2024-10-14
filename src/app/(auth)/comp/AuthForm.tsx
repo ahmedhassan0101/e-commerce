@@ -11,11 +11,7 @@ import Link from "next/link";
 import { KeySquare, Send, User } from "lucide-react";
 import { authApi } from "@/utils/apiService";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  AuthData,
-  getInitialValues,
-  getValidationSchema,
-} from "./sign-up/constants";
+import { AuthData, getInitialValues, getValidationSchema } from "./constants";
 interface SubmitOptions {
   setSubmitting: (isSubmitting: boolean) => void;
 }
@@ -57,7 +53,8 @@ const AuthForm: React.FC<{ isSignUp?: boolean }> = ({ isSignUp }) => {
             });
             router.push("/login");
           } else {
-            router.push(callbackUrl);
+            router.push("/");
+            // router.push(callbackUrl);
           }
         } else {
           toast({
@@ -149,6 +146,17 @@ const AuthForm: React.FC<{ isSignUp?: boolean }> = ({ isSignUp }) => {
                   className="p-2"
                 >
                   <Link href="/sign-up">Sign up</Link>
+                </Button>
+              </div>
+              <div>
+              Forgot your password?
+                <Button
+                  asChild
+                  variant="link"
+                  disabled={isSubmitting}
+                  className="p-2"
+                >
+                  <Link href="/forgot-password">Forgot password</Link>
                 </Button>
               </div>
             </div>

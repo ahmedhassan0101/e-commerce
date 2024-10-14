@@ -1,18 +1,14 @@
-export const imageLoader = (path: string): string => `/${path}`;
+
 import * as Yup from "yup";
 // import crypto from "crypto";
-import jwt from "jsonwebtoken";
 
-export function generateVerificationToken(userId: string): string {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET as string,
-    { expiresIn: "24h" } // Token expires in 24 hours
-  );
-}
 // export function generateVerificationToken(): string {
 //   return crypto.randomBytes(32).toString("hex");
 // }
+
+
+export const imageLoader = (path: string): string => `/${path}`;
+
 
 export function validateBody<T>(body: unknown, schema: Yup.Schema<T>): T {
   try {

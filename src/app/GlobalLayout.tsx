@@ -10,9 +10,12 @@ import { ReactNode } from "react";
 
 export default function GlobalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isAuthPages = ["login", "sign-up"].some((path) =>
-    pathname?.startsWith(`/${path}`)
-  );
+  const isAuthPages = [
+    "login",
+    "sign-up",
+    "forgot-password",
+    "reset-password",
+  ].some((path) => pathname?.startsWith(`/${path}`));
 
   return (
     <>

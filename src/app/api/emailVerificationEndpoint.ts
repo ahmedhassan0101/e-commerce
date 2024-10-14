@@ -6,17 +6,14 @@ import User from "@/app/models/User";
 export async function GET(request: Request) {
   try {
     await db.connectDb();
-
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
-
     if (!token) {
       return NextResponse.json(
         { message: "Invalid verification token" },
         { status: 400 }
       );
     }
-
     try {
       // Verify and decode the JWT token
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
